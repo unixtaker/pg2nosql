@@ -1,0 +1,11 @@
+This project is an effort to create a simple and working program to help
+people migrate data to different nosql solutions to evaluate their use.
+
+Getting Started
+
+# install the necessary supporting libraries
+
+pip install couchdb
+pip install psycopg2
+
+
