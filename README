@@ -5,7 +5,9 @@ Getting Started
 
 # install the necessary supporting libraries
 
-pip install couchdb
-pip install psycopg2
+virtualenv .
+
+./bin/pip install couchdb
+./bin/pip install psycopg2
 
 

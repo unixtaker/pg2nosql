@@ -1,29 +1,67 @@
 import argparse
 import psycopg2
+import psycopg2.extras 
+import couchdb
 import sys
+import json
+import time
+from datetime import date
+
+
+class DateEncoder(json.JSONEncoder):
+	
+	def default(self, obj):
+		if isinstance(obj,date):
+			return str(obj)
+		return json.JSONEncoder.default(self, obj)
+
 
 parser = argparse.ArgumentParser(description='Exports data from PostGreSQL to NoSQL datastore')
 parser.add_argument('--batchsize', default=1000, dest='batchsize',help='the number of records pulled from the source db at 1 time.')
 parser.add_argument('--sourcetable', required=True, dest='sourcetable', help='The source table to export')
 parser.add_argument('--id', dest='id', required=True, help='the primary key field of the source table')
 parser.add_argument('--destdb', required=True, dest='destdb', help='The database name to store the records in couchdb')
-
+parser.add_argument('--couchdb', default=True, help='The destination is couchdb')
 args = parser.parse_args()
 
+couch = couchdb.Server()
+try:
+	couch.delete(args.destdb)
+except:
+	db = couch.create( args.destdb)
 
-conn_string = "host='localhost' dbname='har' " 
-#user='postgres' password='postgres'"
-conn = psycopg2.connect(conn_string)
+
+def exportSourceData():
+	conn_string = "host='localhost' dbname='har' " 
+	#user='postgres' password='postgres'"
+	conn = psycopg2.connect(conn_string)
+	cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+	cpos = 0
+	while True:
+		sql = "SELECT " + args.id + " as _id,  * FROM " + args.sourcetable + " limit " + str(args.batchsize) + " OFFSET " + str(cpos)
+		#print sql
+		cursor.execute(sql)
+		recordbatch = cursor.fetchall()
+		saveToDest(recordbatch)
+		if len(recordbatch) ==0:
+			break
+		else:
+			cpos+= len(recordbatch)
+	return
+
+def saveToDest(records):
+	if ( args.couchdb ):
+		print 'Saving to Couchdb'
+		for record in records:
+			try:
+				#docid = record["id_id"]
+				doc = json.dumps(record, cls=DateEncoder) # default=to_json)
+				#print doc
+				db.save(doc)
+				#db[docid] = doc
+			except:
+				print 'Problem saving: ' + record['_id']
+	return
 
 
-cursor = conn.cursor()
-cpos = 0
-while True:
-	sql = "SELECT " + args.id + " as _id, * FROM " + args.sourcetable + " limit " + str(args.batchsize) + " OFFSET " + str(cpos)
-	print sql
-	cursor.execute(sql)
-	recordbatch = cursor.fetchall()
-	if len(recordbatch) ==0:
-		break
-	else:
-		cpos+= len(recordbatch)
+exportSourceData()
