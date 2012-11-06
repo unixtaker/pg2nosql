@@ -4,7 +4,6 @@ import psycopg2.extras
 import couchdb
 import sys
 import json
-import time
 from datetime import date
 
 
@@ -25,10 +24,9 @@ parser.add_argument('--couchdb', default=True, help='The destination is couchdb'
 args = parser.parse_args()
 
 couch = couchdb.Server()
-try:
-	couch.delete(args.destdb)
-except:
-	db = couch.create( args.destdb)
+
+#couch.delete(args.destdb)
+db = couch.create( args.destdb)
 
 
 def exportSourceData():
@@ -56,11 +54,14 @@ def saveToDest(records):
 			try:
 				#docid = record["id_id"]
 				doc = json.dumps(record, cls=DateEncoder) # default=to_json)
+				
+				doc2 = json.loads(doc)
 				#print doc
-				db.save(doc)
+				db.save(doc2)
 				#db[docid] = doc
-			except:
-				print 'Problem saving: ' + record['_id']
+			except Exception as e:
+				print 'Problem saving: ' + record['_id'] + ' with ' 
+				print e
 	return
 
 
