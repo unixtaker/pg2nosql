@@ -36,8 +36,8 @@ def exportSourceData():
 	cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
 	cpos = 0
 	while True:
-		sql = "SELECT " + args.id + " as _id,  * FROM " + args.sourcetable + " limit " + str(args.batchsize) + " OFFSET " + str(cpos)
-		#print sql
+		sql = "SELECT cast(" + args.id + " as varchar) as _id,  * FROM " + args.sourcetable + " ORDER BY " + args.id + " limit " + str(args.batchsize) + " OFFSET " + str(cpos)
+		print sql
 		cursor.execute(sql)
 		recordbatch = cursor.fetchall()
 		saveToDest(recordbatch)
@@ -60,7 +60,7 @@ def saveToDest(records):
 				db.save(doc2)
 				#db[docid] = doc
 			except Exception as e:
-				print 'Problem saving: ' + record['_id'] + ' with ' 
+				#print 'Problem saving: ' + ((str)record[0]) + ' with ' 
 				print e
 	return
 
