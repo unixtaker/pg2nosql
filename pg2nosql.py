@@ -26,7 +26,7 @@ args = parser.parse_args()
 couch = couchdb.Server()
 
 #couch.delete(args.destdb)
-db = couch.create( args.destdb)
+db = couch[args.destdb]
 
 
 def exportSourceData():
@@ -36,7 +36,9 @@ def exportSourceData():
 	cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
 	cpos = 0
 	while True:
-		sql = "SELECT cast(" + args.id + " as varchar) as _id,  * FROM " + args.sourcetable + " ORDER BY " + args.id + " limit " + str(args.batchsize) + " OFFSET " + str(cpos)
+		#sql = "SELECT cast(" + args.id + " as varchar) as _id,  * FROM " + args.sourcetable + " ORDER BY " + args.id + " limit " + str(args.batchsize) + " OFFSET " + str(cpos)
+		
+		sql = "SELECT  * FROM " + args.sourcetable + " ORDER BY " + args.id + " limit " + str(args.batchsize) + " OFFSET " + str(cpos)
 		print sql
 		cursor.execute(sql)
 		recordbatch = cursor.fetchall()
@@ -56,6 +58,7 @@ def saveToDest(records):
 				doc = json.dumps(record, cls=DateEncoder) # default=to_json)
 				
 				doc2 = json.loads(doc)
+				doc2["type"] = args.sourcetable
 				#print doc
 				db.save(doc2)
 				#db[docid] = doc
