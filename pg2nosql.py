@@ -1,3 +1,4 @@
+import getpass
 import argparse
 import psycopg2
 import psycopg2.extras 
@@ -21,7 +22,14 @@ parser.add_argument('--sourcetable', required=True, dest='sourcetable', help='Th
 parser.add_argument('--id', dest='id', required=True, help='the primary key field of the source table')
 parser.add_argument('--destdb', required=True, dest='destdb', help='The database name to store the records in couchdb')
 parser.add_argument('--couchdb', default=True, help='The destination is couchdb')
+parser.add_argument('--pgserver',required=True)
+parser.add_argument('--pgdatabase',required=True)
+parser.add_argument('--pgusername')
+
 args = parser.parse_args()
+
+if (args.pgusername): 
+	pgpassword = getpass.getpass(prompt="Password for postgresql connection:")
 
 couch = couchdb.Server()
 
@@ -30,14 +38,13 @@ db = couch[args.destdb]
 
 
 def exportSourceData():
-	conn_string = "host='localhost' dbname='har' " 
+	conn_string = "host='{0}' dbname='{1}' user='{2}' password='{3}'".format(args.pgserver, args.pgdatabase, args.pgusername, pgpassword)
 	#user='postgres' password='postgres'"
 	conn = psycopg2.connect(conn_string)
 	cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
 	cpos = 0
 	while True:
-		#sql = "SELECT cast(" + args.id + " as varchar) as _id,  * FROM " + args.sourcetable + " ORDER BY " + args.id + " limit " + str(args.batchsize) + " OFFSET " + str(cpos)
-		
+		#sql = "SELECT cast(" + args.id + " as varchar) as _id,  * FROM " + args.sourcetable + " ORDER BY " + args.id + " limit " + str(args.batchsize) + " OFFSET " + str(cpos)		
 		sql = "SELECT  * FROM " + args.sourcetable + " ORDER BY " + args.id + " limit " + str(args.batchsize) + " OFFSET " + str(cpos)
 		print sql
 		cursor.execute(sql)
