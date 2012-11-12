@@ -43,7 +43,11 @@ if ( args.mongodb ):
 
 
 def exportSourceData():
-	conn_string = "host='{0}' dbname='{1}' user='{2}' password='{3}'".format(args.pgserver, args.pgdatabase, args.pgusername, pgpassword)
+	if ( args.pgusername):
+		conn_string = "host='{0}' dbname='{1}' user='{2}' password='{3}'".format(args.pgserver, args.pgdatabase, args.pgusername, pgpassword)
+	else:
+		conn_string = "host='{0}' dbname='{1}'".format(args.pgserver, args.pgdatabase)
+
 	#user='postgres' password='postgres'"
 	conn = psycopg2.connect(conn_string)
 	cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
