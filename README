@@ -9,5 +9,24 @@ virtualenv .
 
 ./bin/pip install couchdb
 ./bin/pip install psycopg2
+./bin/pip install pymongo
+
+./bin/python pg2nosql.py
+
+
+
+# Getting Started on Windows
+
+virtualenv .
+
+Download the precompiled psycopg2 module for your system, even on 64 bit windows your virtualenv may be 32bit so run 
+.\Scripts\python  and check the message for win32 or win64.  Extract the egg file in to .\lib\site-packages and extract the rest of the files to .\lib\psycopg2
+
+
+
+.\Scripts\pip install couchdb
+.\Scripts\pip install pymongo
+
+.\Scripts\python pg2nosql.py
 
 

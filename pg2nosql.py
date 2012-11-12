@@ -2,7 +2,6 @@ import getpass
 import argparse
 import psycopg2
 import psycopg2.extras 
-import couchdb
 import sys
 import json
 from datetime import date
@@ -21,20 +20,26 @@ parser.add_argument('--batchsize', default=1000, dest='batchsize',help='the numb
 parser.add_argument('--sourcetable', required=True, dest='sourcetable', help='The source table to export')
 parser.add_argument('--id', dest='id', required=True, help='the primary key field of the source table')
 parser.add_argument('--destdb', required=True, dest='destdb', help='The database name to store the records in couchdb')
-parser.add_argument('--couchdb', default=True, help='The destination is couchdb')
+parser.add_argument('--couchdb', default=False, help='The destination is couchdb')
 parser.add_argument('--pgserver',required=True)
 parser.add_argument('--pgdatabase',required=True)
 parser.add_argument('--pgusername')
+parser.add_argument('--mongodb', dest='mongodb', default=False, help='Store data in Mongodb')
 
 args = parser.parse_args()
 
 if (args.pgusername): 
 	pgpassword = getpass.getpass(prompt="Password for postgresql connection:")
 
-couch = couchdb.Server()
-
-#couch.delete(args.destdb)
-db = couch[args.destdb]
+if ( args.couchdb ):
+	import couchdb
+	destserver = couchdb.Server()
+	db = destserver[args.destdb]
+if ( args.mongodb ):
+	import pymongo
+	from pymongo import Connection
+	destserver = Connection()
+	db = destserver[args.destdb]
 
 
 def exportSourceData():
@@ -60,18 +65,24 @@ def saveToDest(records):
 	if ( args.couchdb ):
 		print 'Saving to Couchdb'
 		for record in records:
-			try:
-				#docid = record["id_id"]
-				doc = json.dumps(record, cls=DateEncoder) # default=to_json)
-				
+			try:				
+				# double convert to get a working json document for every case
+				doc = json.dumps(record, cls=DateEncoder) 
 				doc2 = json.loads(doc)
-				doc2["type"] = args.sourcetable
-				#print doc
-				db.save(doc2)
-				#db[docid] = doc
+				# add a type attribute so we can dig out different sets of data in views
+				doc2["type"] = args.sourcetable				
+				db.save(doc2)				
 			except Exception as e:
 				#print 'Problem saving: ' + ((str)record[0]) + ' with ' 
 				print e
+	if ( args.mongodb ):
+		print 'Saving to Mongodb'
+		for record in records:
+				try:
+					mycol = db[args.sourcetable]
+					mycol.insert(record)					
+				except Exception as e:
+					print e
 	return
 
 
