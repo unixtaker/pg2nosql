@@ -22,6 +22,16 @@ virtualenv .
 Download the precompiled psycopg2 module for your system, even on 64 bit windows your virtualenv may be 32bit so run 
 .\Scripts\python  and check the message for win32 or win64.  Extract the egg file in to .\lib\site-packages and extract the rest of the files to .\lib\psycopg2
 
+https://zignar.net/2012/06/17/install-python-on-windows/
+
+# edit .\Lib\distutils\distutils.cfg  and add the build for mingw32
+
+[build]
+compiler=mingw32
+
+.\scripts\pip install cython
+.\scripts\pip install pymssql
+# if pymssql fails, cd build/pymssql ; ../../Scripts/python setup.py build ;  ../../Scripts/python setup.py install ; ../../Scripts/python ez_setup.py -U setuptools
 
 
 .\Scripts\pip install couchdb
